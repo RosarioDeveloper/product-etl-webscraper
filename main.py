@@ -1,10 +1,12 @@
 import asyncio
 from types import NoneType
 from typing import Callable, get_type_hints
+from dotenv import load_dotenv
 
 from src.ebay_data_extrat import EbayDataExtractor
 from src.web_scraper import WebScraper
 
+load_dotenv()
 
 # Run stages in pipelibe mode
 async def pipeline(*funcs: Callable):

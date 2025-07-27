@@ -1,3 +1,4 @@
+import os
 from bs4 import BeautifulSoup
 from pathlib import Path
 import csv
@@ -85,30 +86,41 @@ class EbayDataExtractor:
         yield transformed_data_dir
 
     async def load_stage(self, stream: AsyncGenerator[Path]) -> None:
+        DB_HOST = os.getenv("DB_HOST")
+        DB_NAME = os.getenv("DB_NAME")
+        DB_USER = os.getenv("DB_USER")
+        DB_PASS = os.getenv("DB_PASSWORD")
+        DB_PORT = os.getenv("DB_PORT")
 
         async with await AsyncConnection.connect(
-            "dbname=data_extract_db user=admin password=admin host=localhost port=5433"
+            f"dbname={DB_NAME} user={DB_USER} password={DB_PASS} host={DB_HOST} port={DB_PORT}"
         ) as conn:
-            print("Loading Data")
             async with conn.cursor() as query:
+                try:
 
-                # Drop table if exist
-                await query.execute(
-                    """ create table if exists products (
-                    id    serial primary key,
-                    name  varchar(255),
-                    price float
-                    ) """
-                )
+                    # Drop table if exist
+                    await query.execute(
+                        """ create table if not exists products (
+                        id    serial primary key,
+                        name  varchar(255),
+                        price float
+                        ) """
+                    )
 
-                dir = await stream.asend(None)
+                    dir = await stream.asend(None)
+                    print("Loading Data\n")
 
-                # Load data to database
-                with open(dir, "r", newline="") as file:
-                    reader = csv.DictReader(file)
+                    # Load data to database
+                    with open(dir, "r", newline="") as file:
+                        reader = csv.DictReader(file)
 
-                    async with query.copy(
-                        "COPY products (name, price) FROM STDIN"
-                    ) as copy:
-                        for row in reader:
-                            await copy.write_row([row["name"], row["price"]])
+                        async with query.copy(
+                            "COPY products (name, price) FROM STDIN"
+                        ) as copy:
+                            for row in reader:
+                                await copy.write_row([row["name"], row["price"]])
+
+                    print("✅ Data extraction successufully ")
+                    print("✅ See results on output folder")
+                except Exception as e:
+                    print("❌ Could not possible extracting data. Try again late")
