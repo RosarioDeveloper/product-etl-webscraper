@@ -1,0 +1,39 @@
+# Use postgres/example user/password credentials
+
+services:
+
+  database:
+    image: postgres
+    restart: always
+    container_name: data-extract
+    env_file:
+     - .env
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - ${DB_PORT}:5432
+
+    volumes:
+     - pgdata:/var/lib/postgresql/data
+
+  app:
+    container_name: data-extrat-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - database
+    env_file:
+     - .env 
+    command: uv run main.py
+    volumes:
+      - .:/app
+    working_dir: /app
+  
+volumes:
+  pgdata:
+
+    
+
