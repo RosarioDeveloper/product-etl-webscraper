@@ -2,8 +2,8 @@ import asyncio
 from types import NoneType
 from typing import Callable, get_type_hints
 
-from extractors.ebay import EbayDataExtractor
-from web_scraper import WebScraper
+from src.ebay_data_extrat import EbayDataExtractor
+from src.web_scraper import WebScraper
 
 
 # Run stages in pipelibe mode

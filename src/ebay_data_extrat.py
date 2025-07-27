@@ -4,7 +4,7 @@ import csv
 from typing import AsyncGenerator
 from psycopg import AsyncConnection
 
-from web_scraper import WebScraper
+from src.web_scraper import WebScraper
 
 
 class EbayDataExtractor:
