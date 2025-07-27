@@ -9,8 +9,15 @@ from src.web_scraper import WebScraper
 
 
 class EbayDataExtractor:
+    """
+    Main class for extracting, transforming, and loading eBay product data.
+    Handles scraping, data cleaning, transformation to CSV, and database loading.
+    """
 
     def __init__(self):
+        """
+        Initializes the EbayDataExtractor, sets up cache, soup, and output directories.
+        """
         self.cache = dict()
         self.soup = BeautifulSoup()
         self.output_path = Path() / "output"
@@ -20,13 +27,23 @@ class EbayDataExtractor:
         self.output_path.mkdir(exist_ok=True)
 
     async def extract_stage(self, stream=None) -> AsyncGenerator[Path | None]:
+        """
+        Scrapes eBay product pages, extracts product name and price, and writes to a text file.
+        Yields the path to the extracted data file.
+        """
 
         def clear_text(text: str):
+            """
+            Cleans product text by removing currency symbols and extra whitespace.
+            """
             import regex
 
             return regex.sub(r"[$\s]+", " ", text).strip()
 
         async def extract_product(raw_data: str):
+            """
+            Parses HTML and yields cleaned product name and price strings for each product found.
+            """
             html = BeautifulSoup(raw_data, "html.parser")
             products = html.select("ul.srp-results > li")
 
@@ -54,14 +71,17 @@ class EbayDataExtractor:
                     if "error" in result:
                         continue
 
-                    html = result.get("html")
-                    async for product in extract_product(str(html)):
-                        if product:
-                            file.write(f"{product}\n")
+                        html = result.get("html")
+                        async for product in extract_product(str(html)):
+                            if product:
+                                file.write(f"{product}\n")
 
             yield output_file
 
     async def transform_stage(self, stream: AsyncGenerator[Path]):
+        """
+        Reads the extracted data file, transforms it into CSV format, and yields the CSV file path.
+        """
         import regex
 
         result = await stream.asend(None)
@@ -86,6 +106,9 @@ class EbayDataExtractor:
         yield transformed_data_dir
 
     async def load_stage(self, stream: AsyncGenerator[Path]) -> None:
+        """
+        Loads the transformed CSV data into a PostgreSQL database table.
+        """
         DB_HOST = os.getenv("DB_HOST")
         DB_NAME = os.getenv("DB_NAME")
         DB_USER = os.getenv("DB_USER")

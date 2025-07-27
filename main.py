@@ -8,8 +8,11 @@ from src.web_scraper import WebScraper
 
 load_dotenv()
 
-# Run stages in pipelibe mode
+# Run stages in pipeline mode
 async def pipeline(*funcs: Callable):
+    """
+    Runs a sequence of async pipeline stages, passing the result of each to the next.
+    """
     result = None
 
     for func in funcs:
@@ -20,6 +23,9 @@ async def pipeline(*funcs: Callable):
 
 
 async def main():
+    """
+    Main entry point: creates EbayDataExtractor and runs the ETL pipeline.
+    """
     ebay_extractor = EbayDataExtractor()
 
     await pipeline(

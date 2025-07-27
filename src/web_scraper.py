@@ -6,7 +6,14 @@ import aiohttp
 
 
 class BrowserHeaders:
+    """
+    Utility class to provide random browser headers for HTTP requests.
+    """
+
     def __init__(self) -> None:
+        """
+        Initializes Chrome and Firefox header dictionaries.
+        """
         self.chrome_headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
@@ -40,13 +47,22 @@ class BrowserHeaders:
         }
 
     def random_headers(self):
+        """
+        Returns a random set of browser headers (Chrome or Firefox).
+        """
         headers = [self.chrome_headers, self.firefox_headers]
         return random.choice(headers)
 
 
 class WebScraper:
+    """
+    Asynchronous web scraper for fetching HTML pages with retry and random headers.
+    """
 
     def __init__(self, delay=(1, 3)):
+        """
+        Initializes the WebScraper, sets up temp folder, retry count, and delay.
+        """
         self.session = None
         self.temp_output = Path() / "temp"
         self.max_retry = 3
@@ -57,6 +73,9 @@ class WebScraper:
         self.browser_headers = BrowserHeaders()
 
     async def __aenter__(self):
+        """
+        Asynchronous context manager entry: creates aiohttp session with custom headers.
+        """
         connector = aiohttp.TCPConnector(
             limit=5,
             limit_per_host=30,
@@ -73,10 +92,17 @@ class WebScraper:
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """
+        Asynchronous context manager exit: closes aiohttp session.
+        """
         if self.session:
             await self.session.close()
 
     async def fetch_page(self, url: str, **kwargs):
+        """
+        Fetches a web page asynchronously with retries and random headers.
+        Returns a dict with the HTML content.
+        """
 
         if not self.session:
             raise RuntimeError("Erro")
